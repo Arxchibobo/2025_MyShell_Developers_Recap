@@ -1,0 +1,33 @@
+# Google Cloud Build 配置文件
+# 用于构建和部署 MyShell 2025 开发者年度回顾项目
+
+steps:
+  # 步骤 1: 安装依赖
+  - name: 'node:20'
+    entrypoint: 'npm'
+    args: ['install', '--legacy-peer-deps']
+    id: 'install-dependencies'
+
+  # 步骤 2: 构建项目
+  - name: 'node:20'
+    entrypoint: 'npm'
+    args: ['run', 'build']
+    id: 'build-project'
+    waitFor: ['install-dependencies']
+
+# 构建选项
+options:
+  # 使用 CLOUD_LOGGING_ONLY 来解决 service_account 配置问题
+  logging: CLOUD_LOGGING_ONLY
+
+  # 机器类型（可选，根据项目大小调整）
+  machineType: 'N1_HIGHCPU_8'
+
+  # 超时时间
+  timeout: '1800s'  # 30 分钟
+
+# 构建产物（可选）
+# artifacts:
+#   objects:
+#     location: 'gs://your-bucket-name/build-artifacts'
+#     paths: ['dist/**']
