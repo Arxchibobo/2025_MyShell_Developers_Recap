@@ -65,5 +65,7 @@ options:
 # 3. 展开 "高级" 部分
 # 4. 在 "替换变量" 中添加：
 #    变量名: _GEMINI_API_KEY
-#    值: AIzaSyCW7d93enbOLiKUnVQqbgaD41lL3oUzZFc
+#    值: 你的新 Gemini API Key（从 https://aistudio.google.com/app/apikey 获取）
 # 5. 保存触发器
+#
+# ⚠️ 安全提醒：切勿在此文件中明文写入 API Key
