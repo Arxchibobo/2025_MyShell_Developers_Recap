@@ -1,20 +1,22 @@
 # Google Cloud Build 配置文件
 # 用于构建和部署 MyShell 2025 开发者年度回顾项目
-#
-# 注意：这是一个 Node.js 项目，不需要 Docker
-# 直接使用 Node.js 容器进行构建
 
 steps:
-  # 步骤 1: 安装依赖
-  - name: 'gcr.io/cloud-builders/npm'
-    args: ['install', '--legacy-peer-deps']
-    id: 'install-dependencies'
+  # 步骤 1: 使用 Docker 构建镜像
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'gcr.io/$PROJECT_ID/myshell-recap:$COMMIT_SHA',
+      '-t', 'gcr.io/$PROJECT_ID/myshell-recap:latest',
+      '.'
+    ]
+    id: 'build-image'
 
-  # 步骤 2: 构建项目
-  - name: 'gcr.io/cloud-builders/npm'
-    args: ['run', 'build']
-    id: 'build-project'
-    waitFor: ['install-dependencies']
+  # 步骤 2: 推送镜像到 Container Registry（可选）
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args: ['push', 'gcr.io/$PROJECT_ID/myshell-recap:$COMMIT_SHA']
+  #   id: 'push-image'
+  #   waitFor: ['build-image']
 
 # 超时时间（顶层配置）
 timeout: '1800s'  # 30 分钟
