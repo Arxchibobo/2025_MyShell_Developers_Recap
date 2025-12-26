@@ -34,12 +34,20 @@ class LocalDB {
 
   public getStats() {
     const total = this.bots.length;
-    // Extract unique developer names, stripping the URL part if present
-    const creators = new Set(this.bots.map(b => b.developer.split('(')[0].trim())).size;
+
+    // 提取唯一开发者名称
+    // 注意：开发者名称已经在解析时去除了URL，这里直接使用即可
+    const uniqueDevs = new Set(this.bots.map(b => b.developer));
+    const creators = uniqueDevs.size;
+
+    // 统计所有Tag
     const allTags = this.bots.flatMap(b => b.tags);
     const tagCounts: Record<string, number> = {};
     allTags.forEach(t => tagCounts[t] = (tagCounts[t] || 0) + 1);
-    
+
+    // 调试输出
+    console.log(`📊 数据库统计: ${total} 个 Bot, ${creators} 位开发者, ${Object.keys(tagCounts).length} 个 Tag`);
+
     return {
       total,
       creators,
@@ -51,16 +59,15 @@ class LocalDB {
 
   public searchByCreator(name: string, mode: 'exact' | 'fuzzy') {
     const query = name.trim().toLowerCase();
-    
+
+    // 开发者名称已在解析时去除URL，直接比较即可
     const matches = this.bots.filter(b => {
-      const rawDev = b.developer.toLowerCase();
-      // Extract name from "Name (URL)" format
-      const cleanName = rawDev.split('(')[0].trim();
-      
+      const devName = b.developer.toLowerCase();
+
       if (mode === 'exact') {
-        return cleanName === query || rawDev === query;
+        return devName === query;
       }
-      return rawDev.includes(query) || cleanName.includes(query);
+      return devName.includes(query);
     });
 
     const entry: LookupHistory = {
@@ -84,7 +91,8 @@ class LocalDB {
   }
 
   private getFuzzySuggestions(query: string) {
-    const devs = Array.from(new Set(this.bots.map(b => b.developer.split('(')[0].trim())));
+    // 获取所有唯一开发者名称
+    const devs = Array.from(new Set(this.bots.map(b => b.developer)));
     return devs
       .filter(d => d.toLowerCase().includes(query))
       .slice(0, 10);

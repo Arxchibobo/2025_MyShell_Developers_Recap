@@ -195,8 +195,8 @@ const App: React.FC = () => {
           <span className="text-transparent bg-clip-text bg-gradient-to-b from-indigo-200 to-indigo-600 text-glow">RECAP 2025.</span>
         </h1>
         <p className="text-gray-400 text-lg md:text-xl font-light max-w-4xl mx-auto leading-relaxed uppercase tracking-[0.2em] italic">
-          嘿，构建者们！2025 是我们共同开启的奇迹之年。感谢全社区 {stats.creators} 位灵魂创作者，在 {stats.total} 个日夜里用代码跨越星辰，用灵感重绘未来。<br/> 
-          这一个个璀璨的智慧结晶，不仅是属于你们的荣耀勋章，更是我们并肩铸就的 AI 辉煌新篇章！
+          嘿，构建者们！2025 是我们共同开启的奇迹之年。感谢全社区 <span className="text-indigo-400 font-black">{stats.creators}</span> 位灵魂创作者，打造了 <span className="text-indigo-400 font-black">{stats.total}</span> 个璀璨的智慧结晶，用代码跨越星辰，用灵感重绘未来。<br/>
+          这些创作不仅是属于你们的荣耀勋章，更是我们并肩铸就的 AI 辉煌新篇章！
         </p>
         <div className="flex justify-center gap-6 pt-12">
            <button onClick={() => setCurrentPage(Page.Creator)} className="px-16 py-6 bg-white text-black font-black rounded-full hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-all text-[14px] uppercase tracking-[0.4em] active:scale-95">开启年度成就档案</button>
