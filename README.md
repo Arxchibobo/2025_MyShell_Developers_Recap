@@ -34,16 +34,41 @@ npm run dev
 
 数据已预先解析完成，无需额外配置即可运行！
 
-## ⚠️ 重要安全提示
+## 🔒 启用 AI 功能（感谢信和头像生成）
 
-**API Key 安全问题：** 当前实现将 API Key 编译到前端代码中，这会导致 API Key 暴露在浏览器环境中。Google 的安全系统会自动检测并禁用任何在公开渠道泄露的 API Key。
+**方法 1：使用 Cloud Functions 后端代理（推荐）⭐**
 
-**推荐解决方案：** 使用后端 API 代理来保护 API Key。详见 [API_PROXY_SOLUTION.md](./API_PROXY_SOLUTION.md)
+这是**生产环境推荐的安全方案**，只需 5-10 分钟：
+
+1. 阅读 [DEPLOY_CLOUD_FUNCTION.md](./DEPLOY_CLOUD_FUNCTION.md)
+2. 执行部署脚本：
+   ```bash
+   cd functions/generate-content
+   ./deploy.sh 你的_API_Key  # Mac/Linux
+   # 或
+   deploy.bat 你的_API_Key   # Windows
+   ```
+3. 完成！AI 功能自动启用
+
+**优势：**
+- ✅ API Key 安全存储在服务端
+- ✅ 前端代码中完全不包含 API Key
+- ✅ 即使 API Key 泄露也无需重新构建
+- ✅ 5 分钟即可完成部署
+
+**方法 2：本地开发（仅用于测试）**
+
+⚠️ **警告：** 此方法会将 API Key 编译到前端代码中，**不适合生产环境**！
+
+```bash
+echo "GEMINI_API_KEY=你的_API_Key" > .env.local
+npm run dev
+```
 
 **当前状态：**
 - ✅ 核心功能正常（数据展示、开发者查询、抽奖）
-- ⚠️ AI 功能需要配置有效的 API Key
-- 🔒 生产环境强烈建议使用后端代理
+- ⏳ AI 功能等待部署 Cloud Functions
+- 🔒 生产环境已配置使用后端代理
 
 ## 🚀 快速开始
 
