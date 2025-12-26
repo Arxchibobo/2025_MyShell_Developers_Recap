@@ -251,7 +251,7 @@ function main() {
   console.log(`  MyShell 2025 Recap - CSV 数据解析器`);
   console.log(`${'='.repeat(60)}\n`);
 
-  const csvPath = path.join(process.cwd(), '生图类bot list (1) 2d43f81ff51e81c9b6c2ec60b255245d.csv');
+  const csvPath = path.join(process.cwd(), 'myshell-bots-2025.csv');
   const outputPath = path.join(process.cwd(), 'assets', 'bots.json');
 
   // 确保 assets 目录存在

@@ -11,6 +11,29 @@
 
 所有数据来自真实的 CSV 文件，经过严格的解析、去重和验证。
 
+## ⚡ 一键启动
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/Arxchibobo/2025_MyShell_Developers_Recap.git
+cd 2025_MyShell_Developers_Recap
+
+# 2. 配置环境变量（可选，用于AI功能）
+cp .env.local.example .env.local
+# 编辑 .env.local 填入你的 Gemini API Key
+
+# 3. 安装依赖（必须使用 --legacy-peer-deps）
+npm install --legacy-peer-deps
+
+# 4. 启动开发服务器
+npm run dev
+
+# 5. 打开浏览器访问
+# http://localhost:3000
+```
+
+数据已预先解析完成，无需额外配置即可运行！
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -21,8 +44,11 @@
 ### 安装依赖
 
 ```bash
+# 使用 --legacy-peer-deps 解决 React 19 和 recharts 的版本冲突
 npm install --legacy-peer-deps
 ```
+
+**重要：** 必须使用 `--legacy-peer-deps` 标志，否则会因 peer dependencies 冲突而安装失败。
 
 ### 启动开发服务器
 
@@ -51,7 +77,8 @@ npm run preview
 ├── data.ts                  # 数据导入模块
 ├── db.ts                    # 内存数据库
 ├── types.ts                 # TypeScript 类型定义
-└── 生图类bot list.csv       # 原始 CSV 数据源
+├── myshell-bots-2025.csv    # 原始 CSV 数据源
+└── .env.local               # Gemini API Key 配置
 ```
 
 ## 🔧 数据处理流程
@@ -95,7 +122,7 @@ npm run validate-data
 
 ### CSV 数据源
 
-**文件：** \`生图类bot list (1) 2d43f81ff51e81c9b6c2ec60b255245d.csv\`
+**文件：** `myshell-bots-2025.csv`
 
 **字段结构：**
 ```csv
