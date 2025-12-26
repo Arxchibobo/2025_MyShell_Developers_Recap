@@ -1,57 +1,116 @@
+/**
+ * MyShell 2025 年度回顾 - AI 内容生成服务
+ *
+ * 安全架构：通过 Cloud Function 代理调用 Gemini API
+ * - API Key 存储在 Cloud Function 环境变量中
+ * - 前端代码中不包含任何 API Key
+ * - 所有 AI 请求通过后端代理转发
+ */
 
-import { GoogleGenAI, Type } from "@google/genai";
+// ⚠️ 重要：部署 Cloud Function 后，请替换为实际的函数 URL
+// 格式：https://REGION-PROJECT_ID.cloudfunctions.net/generate-content
+const CLOUD_FUNCTION_URL = process.env.CLOUD_FUNCTION_URL ||
+  'https://europe-west1-gen-lang-client-0260270819.cloudfunctions.net/generate-content';
 
-export const getGeminiResponse = async (prompt: string, model: string = 'gemini-3-flash-preview') => {
+console.log('🔧 Cloud Function 配置:');
+console.log('   URL:', CLOUD_FUNCTION_URL);
+
+/**
+ * 调用 Cloud Function 生成内容
+ * @param type 内容类型：'thanks-letter'（感谢信）或 'avatar'（头像）
+ * @param developerName 开发者名称
+ * @param botCount Bot 数量
+ * @param topCategory 主要类别
+ */
+async function callCloudFunction(
+  type: 'thanks-letter' | 'avatar',
+  developerName: string,
+  botCount: number,
+  topCategory: string
+): Promise<string | null> {
   try {
-    console.log('🤖 调用 Gemini API:', model);
-    console.log('🔑 API Key 状态:', process.env.API_KEY ? '已配置' : '未配置');
+    console.log(`📡 调用 Cloud Function: type=${type}, developer=${developerName}`);
 
-    if (!process.env.API_KEY) {
-      console.error('❌ Gemini API Key 未配置');
-      throw new Error('Gemini API Key 未配置，请检查环境变量');
-    }
-
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
+    const response = await fetch(CLOUD_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type,
+        developerName,
+        botCount,
+        topCategory
+      })
     });
 
-    console.log('✅ Gemini API 调用成功');
-    return response.text;
+    console.log(`📡 Cloud Function 响应状态: ${response.status}`);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: '未知错误' }));
+      console.error(`❌ Cloud Function 调用失败 (${response.status}):`, errorData);
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+      console.error('❌ Cloud Function 返回失败:', data.error);
+      throw new Error(data.error || '生成失败');
+    }
+
+    console.log(`✅ Cloud Function 调用成功: ${type}`);
+    return data.result;
+
   } catch (error) {
-    console.error('❌ Gemini API 调用失败:', error);
+    console.error(`❌ 调用 Cloud Function 失败 (${type}):`, error);
     throw error;
   }
-};
+}
 
-export const generateArchetypeSummary = async (name: string, botCount: number, topTag: string) => {
+/**
+ * 生成个性化感谢信
+ * @param name 开发者名称
+ * @param botCount Bot 数量
+ * @param topTag 主要标签
+ * @returns 感谢信文本
+ */
+export const generateArchetypeSummary = async (
+  name: string,
+  botCount: number,
+  topTag: string
+): Promise<string> => {
   try {
     console.log('📝 生成感谢信:', { name, botCount, topTag });
 
-    const prompt = `你是一位 MyShell 社区首席官。正在为 2025 年度总结撰写致辞。
-  目标对象：开发者 "${name}"。
-  成就：贡献了 ${botCount} 个 Bot。
-  核心领域：${topTag}。
-  请写一段简短有力的中文感谢信（50-80字）。
-  要求包含：名字 "${name}"、数字 "${botCount}"、关键词"创意火种"、"智能版图"。
-  语气：激动人心且富有敬意。`;
+    const result = await callCloudFunction(
+      'thanks-letter',
+      name,
+      botCount,
+      topTag
+    );
 
-    const result = await getGeminiResponse(prompt, 'gemini-3-flash-preview');
+    if (!result) {
+      throw new Error('感谢信生成返回空值');
+    }
+
     console.log('✅ 感谢信生成成功');
     return result;
+
   } catch (error) {
     console.error('❌ 感谢信生成失败，返回备用文案:', error);
-    // 返回备用感谢信
+
+    // 返回备用感谢信（不依赖 API）
     return `${name}，你在 2025 年点燃了 ${botCount} 个创意火种，在 ${topTag} 领域绘制了属于自己的智能版图。感谢你为 MyShell 社区带来的每一份创新与热情！`;
   }
 };
 
 /**
- * 使用 Nana Banana Pro 生成开发者个性化头像
+ * 生成开发者个性化头像
  * @param developerName 开发者名称
  * @param botCount Bot 数量
  * @param topCategory 主要创作类别
+ * @returns Base64 编码的图片 URL，失败返回 null
  */
 export const generateDeveloperAvatar = async (
   developerName: string,
@@ -60,119 +119,51 @@ export const generateDeveloperAvatar = async (
 ): Promise<string | null> => {
   try {
     console.log('🎨 生成开发者头像:', { developerName, botCount, topCategory });
-    console.log('🔑 MYSHELL_API_KEY 状态:', process.env.MYSHELL_API_KEY ? '已配置' : '未配置');
-    console.log('🔑 API_KEY 备用状态:', process.env.API_KEY ? '已配置' : '未配置');
 
-    // 临时禁用 Nana Banana Pro，直接使用 Gemini 生成图片
-    // 原因：1. MyShell API 端点需要验证  2. 当前 Gemini API Key 已泄露需要更换
-    console.log('⏭️  跳过 Nana Banana Pro，直接使用 Gemini 生成图片');
-    return await generateFutureVisionFallback(developerName, topCategory);
+    const result = await callCloudFunction(
+      'avatar',
+      developerName,
+      botCount,
+      topCategory
+    );
 
-    /* 暂时注释掉 Nana Banana Pro 调用
-    // Nana Banana Pro 提示词：庆祝开发者成就的个性化头像
-    const prompt = `A stunning avatar celebrating developer achievement.
-    Portrait of a creative AI developer, tech-style illustration.
-    Central focus: A confident developer surrounded by holographic ${topCategory} icons and ${botCount} floating bot symbols.
-    Text overlay: "${developerName}" in elegant futuristic typography.
-    Color scheme: Deep indigo blue (#6366f1), purple gradient, white accents.
-    Style: Modern tech illustration, Pixar-like 3D character design, professional and inspiring.
-    Lighting: Soft purple glow, blue rim light, warm highlights.
-    Mood: Celebratory, innovative, achievement-focused.
-    Background: Abstract tech particles, code snippets, MyShell branding elements.
-    Quality: High-resolution, clean composition, award ceremony aesthetic.`;
-
-    const apiKey = process.env.MYSHELL_API_KEY || process.env.API_KEY;
-
-    if (!apiKey) {
-      console.error('❌ 未配置 API Key，无法调用 Nana Banana Pro');
-      return await generateFutureVisionFallback(developerName, topCategory);
+    if (!result) {
+      console.warn('⚠️ 头像生成返回空值');
+      return null;
     }
 
-    console.log('📡 调用 Nana Banana Pro API...');
+    console.log('✅ 头像生成成功');
+    return result;
 
-    // 调用 MyShell Nana Banana Pro API
-    // 使用正确的 MyShell API 格式
-    const response = await fetch('https://api.myshell.ai/v1/bot/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-myshell-openai-api-key': apiKey
-      },
-      body: JSON.stringify({
-        bot_id: 'nana-banana-pro',
-        messages: [{
-          role: 'user',
-          content: prompt
-        }],
-        stream: false
-      })
-    });
-
-    console.log('📡 Nana Banana Pro API 响应状态:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.warn('⚠️ Nana Banana Pro API 调用失败:', response.status, errorText);
-      console.log('🔄 回退到 Gemini 图片生成...');
-      return await generateFutureVisionFallback(developerName, topCategory);
-    }
-    */
   } catch (error) {
-    console.error('❌ 生成开发者头像失败:', error);
-    // 回退到 Gemini 图片生成
-    console.log('🔄 尝试回退到 Gemini 图片生成...');
-    return await generateFutureVisionFallback(developerName, topCategory);
+    console.error('❌ 头像生成失败:', error);
+    return null;
   }
 };
 
 /**
- * 使用 Gemini 生成开发者成就图片（备用方案）
+ * 别名：生成未来愿景图片（与 generateDeveloperAvatar 相同）
  */
-async function generateFutureVisionFallback(developerName: string, topCategory: string) {
+export const generateFutureVision = generateDeveloperAvatar;
+
+/**
+ * 检查 Cloud Function 健康状态
+ * @returns 是否可用
+ */
+export async function checkCloudFunctionHealth(): Promise<boolean> {
   try {
-    console.log('🔄 使用 Gemini 备用方案生成图片:', { developerName, topCategory });
+    console.log('🔍 检查 Cloud Function 健康状态...');
 
-    if (!process.env.API_KEY) {
-      console.error('❌ Gemini API Key 未配置，无法生成备用图片');
-      return null;
-    }
-
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `A cinematic 3D masterpiece celebrating the developer "${developerName}".
-  The center of the image is a massive, elegant golden trophy.
-  Extremely important: The text "${developerName}" MUST be written in huge, clean, bold 3D typography on the body of the trophy.
-  A cute high-tech MyShell mascot robot (indigo blue and white) is hugging the trophy excitedly.
-  Background: A high-tech stadium with holographic screens displaying "${topCategory}" and floating code particles.
-  Lighting: Epic purple and blue spotlights, golden sparkles, confetti.
-  Style: 4K Octane render, Pixar movie quality, hyper-realistic textures.
-  The name "${developerName}" is the hero of this visual.`;
-
-    console.log('📡 调用 Gemini 图片生成 API...');
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
-      contents: { parts: [{ text: prompt }] },
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1",
-          imageSize: "2K"
-        }
-      }
+    const response = await fetch(CLOUD_FUNCTION_URL, {
+      method: 'OPTIONS', // 预检请求
     });
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        console.log('✅ Gemini 图片生成成功');
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
+    const isHealthy = response.ok || response.status === 204;
+    console.log(`${isHealthy ? '✅' : '❌'} Cloud Function 状态: ${isHealthy ? '正常' : '异常'}`);
 
-    console.warn('⚠️ Gemini 响应中未找到图片数据');
-    return null;
+    return isHealthy;
   } catch (error) {
-    console.error('❌ Gemini 备用图片生成失败:', error);
-    return null;
+    console.error('❌ Cloud Function 健康检查失败:', error);
+    return false;
   }
 }
-
-export const generateFutureVision = generateDeveloperAvatar;

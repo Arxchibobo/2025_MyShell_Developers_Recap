@@ -1,0 +1,22 @@
+{
+  "name": "myshell-generate-content",
+  "version": "1.0.0",
+  "description": "MyShell 2025 年度回顾 - Gemini API 代理函数",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "gemini",
+    "api-proxy",
+    "myshell"
+  ],
+  "author": "MyShell Team",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^0.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
