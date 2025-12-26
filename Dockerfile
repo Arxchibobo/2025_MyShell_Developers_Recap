@@ -19,21 +19,25 @@ COPY . .
 # 构建项目
 RUN npm run build
 
-# 阶段 2: 生产阶段
-FROM node:20-alpine AS production
+# 阶段 2: 生产阶段（使用 nginx 提供静态文件）
+FROM nginx:alpine AS production
 
-# 设置工作目录
-WORKDIR /app
+# 从构建阶段复制构建产物到 nginx 默认目录
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 从构建阶段复制构建产物
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+# 创建 nginx 配置文件（支持 SPA 路由）
+RUN echo 'server { \
+    listen 8080; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-# 安装生产依赖（可选，如果需要运行服务器）
-RUN npm install --production --legacy-peer-deps
-
-# 暴露端口（AI Studio 通常使用 8080）
+# 暴露端口（Cloud Run 使用 8080）
 EXPOSE 8080
 
-# 启动命令（使用 preview 或自定义服务器）
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "8080"]
+# 启动 nginx（前台运行）
+CMD ["nginx", "-g", "daemon off;"]
