@@ -2,10 +2,11 @@
 # 用于构建和部署 MyShell 2025 开发者年度回顾项目
 
 steps:
-  # 步骤 1: 使用 Docker 构建镜像
+  # 步骤 1: 使用 Docker 构建镜像（注入 API Key 作为构建参数）
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
+      '--build-arg', 'GEMINI_API_KEY=${_GEMINI_API_KEY}',
       '-t', 'gcr.io/$PROJECT_ID/myshell-recap:$COMMIT_SHA',
       '-t', 'gcr.io/$PROJECT_ID/myshell-recap:latest',
       '.'
@@ -53,3 +54,16 @@ options:
 #   objects:
 #     location: 'gs://your-bucket-name/build-artifacts'
 #     paths: ['dist/**']
+
+# 替换变量（Substitution Variables）
+# 需要在 Cloud Build 触发器中配置以下变量：
+# _GEMINI_API_KEY: 你的 Gemini API Key
+#
+# 配置方法：
+# 1. 打开 Cloud Console -> Cloud Build -> 触发器
+# 2. 编辑触发器
+# 3. 展开 "高级" 部分
+# 4. 在 "替换变量" 中添加：
+#    变量名: _GEMINI_API_KEY
+#    值: AIzaSyCW7d93enbOLiKUnVQqbgaD41lL3oUzZFc
+# 5. 保存触发器

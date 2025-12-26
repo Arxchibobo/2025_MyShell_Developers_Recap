@@ -16,7 +16,11 @@ RUN npm install --legacy-peer-deps
 # 复制源代码
 COPY . .
 
-# 构建项目
+# 接收构建参数（API Key）
+ARG GEMINI_API_KEY
+ENV GEMINI_API_KEY=$GEMINI_API_KEY
+
+# 构建项目（环境变量会被 Vite 读取并注入到代码中）
 RUN npm run build
 
 # 阶段 2: 生产阶段（使用 nginx 提供静态文件）
