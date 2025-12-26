@@ -12,11 +12,30 @@ steps:
     ]
     id: 'build-image'
 
-  # 步骤 2: 推送镜像到 Container Registry（可选）
-  # - name: 'gcr.io/cloud-builders/docker'
-  #   args: ['push', 'gcr.io/$PROJECT_ID/myshell-recap:$COMMIT_SHA']
-  #   id: 'push-image'
-  #   waitFor: ['build-image']
+  # 步骤 2: 推送镜像到 Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/myshell-recap:$COMMIT_SHA']
+    id: 'push-image'
+    waitFor: ['build-image']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/myshell-recap:latest']
+    id: 'push-latest'
+    waitFor: ['build-image']
+
+  # 步骤 3: 部署到 Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'myshell2025recap',
+      '--image', 'gcr.io/$PROJECT_ID/myshell-recap:$COMMIT_SHA',
+      '--region', 'europe-west1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--port', '8080'
+    ]
+    id: 'deploy-cloudrun'
+    waitFor: ['push-image']
 
 # 超时时间（顶层配置）
 timeout: '1800s'  # 30 分钟
