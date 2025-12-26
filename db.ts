@@ -4,6 +4,7 @@ class LocalDB {
   private bots: BotRecord[] = [];
   private history: LookupHistory[] = [];
   private events: UserEvent[] = [];
+  private luckyWinner: string = ''; // 中奖者名字
 
   constructor() {
     this.loadPersistedData();
@@ -12,8 +13,10 @@ class LocalDB {
   private loadPersistedData() {
     const h = localStorage.getItem('bot_lookup_history');
     const e = localStorage.getItem('bot_user_events');
+    const w = localStorage.getItem('lucky_winner');
     if (h) this.history = JSON.parse(h);
     if (e) this.events = JSON.parse(e);
+    if (w) this.luckyWinner = w;
   }
 
   private saveHistory() {
@@ -26,6 +29,15 @@ class LocalDB {
 
   public seed(data: BotRecord[]) {
     this.bots = data;
+
+    // 如果还没有选出中奖者，随机选择一位
+    if (!this.luckyWinner && data.length > 0) {
+      const uniqueDevs = Array.from(new Set(data.map(b => b.developer)));
+      const randomIndex = Math.floor(Math.random() * uniqueDevs.length);
+      this.luckyWinner = uniqueDevs[randomIndex];
+      localStorage.setItem('lucky_winner', this.luckyWinner);
+      console.log('🎉 彩蛋抽奖：中奖者已选出！', this.luckyWinner);
+    }
   }
 
   public getAllBots(): BotRecord[] {
@@ -82,11 +94,15 @@ class LocalDB {
     this.saveHistory();
     this.logEvent('search', { query: name, mode, results: matches.length });
 
+    // 检查是否为中奖者
+    const isWinner = matches.length > 0 && matches.some(b => b.developer === this.luckyWinner);
+
     return {
       matches,
-      suggestions: mode === 'fuzzy' && matches.length === 0 
-        ? this.getFuzzySuggestions(query) 
-        : []
+      suggestions: mode === 'fuzzy' && matches.length === 0
+        ? this.getFuzzySuggestions(query)
+        : [],
+      isLuckyWinner: isWinner // 添加中奖标识
     };
   }
 

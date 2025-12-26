@@ -121,18 +121,13 @@ const getCategoryIcon = (tag: string = '') => {
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Overview);
   const [searchName, setSearchName] = useState('');
-  const [creatorResults, setCreatorResults] = useState<{ matches: BotRecord[], suggestions: string[] } | null>(null);
+  const [creatorResults, setCreatorResults] = useState<{ matches: BotRecord[], suggestions: string[], isLuckyWinner?: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [personalArchetype, setPersonalArchetype] = useState<string>('');
   const [titleInfo, setTitleInfo] = useState<TitleInfo | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null); // 用于截图分享
-
-  // 抽奖相关状态
-  const [showLottery, setShowLottery] = useState(false);
-  const [lotteryWinner, setLotteryWinner] = useState<string | null>(null);
-  const [clickCount, setClickCount] = useState(0);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [isLuckyWinner, setIsLuckyWinner] = useState(false); // 中奖标识
 
   const stats = useMemo(() => db.getStats(), []);
 
@@ -153,6 +148,7 @@ const App: React.FC = () => {
     setPersonalArchetype('');
     setTitleInfo(null);
     setShowConfetti(false); // 重置彩纸动画
+    setIsLuckyWinner(false); // 重置中奖状态
 
     const res = db.searchByCreator(searchName, 'fuzzy');
     setCreatorResults(res);
@@ -160,6 +156,11 @@ const App: React.FC = () => {
     if (res.matches.length > 0) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000); // 5秒后自动隐藏
+
+      // 检查是否中奖
+      if (res.isLuckyWinner) {
+        setIsLuckyWinner(true);
+      }
 
       const topTag = res.matches[0].tags[0] || 'AI';
       const botCount = res.matches.length;
@@ -449,6 +450,20 @@ const App: React.FC = () => {
             <div className="relative z-10 space-y-16">
               {/* 标题和称号 */}
               <div className="text-center space-y-8">
+                {/* 中奖提示 */}
+                {isLuckyWinner && (
+                  <div className="mb-12 animate-bounce">
+                    <div className="inline-flex items-center gap-6 px-16 py-8 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/40 shadow-[0_0_80px_rgba(234,179,8,0.5)]">
+                      <span className="text-7xl animate-pulse">🎉</span>
+                      <div className="text-left">
+                        <div className="text-4xl font-black text-yellow-300">恭喜中奖！</div>
+                        <div className="text-lg text-yellow-200 mt-1">你是本次年度回顾的幸运儿！</div>
+                      </div>
+                      <span className="text-7xl animate-pulse">🎊</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-center gap-4">
                   <div className="w-12 h-[2px] bg-indigo-500"></div>
                   <span className="text-indigo-400 text-sm font-black uppercase tracking-[0.6em]">MyShell 2025 Achievement</span>

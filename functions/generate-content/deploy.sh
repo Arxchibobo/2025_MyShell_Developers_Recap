@@ -23,19 +23,13 @@ echo -e "${BLUE}   MyShell 2025 Cloud Function 部署工具   ${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-# 检查参数
+# 检查参数（可选，如果未提供则使用默认值）
 if [ -z "$1" ]; then
-  echo -e "${RED}❌ 错误：请提供 Gemini API Key${NC}"
-  echo ""
-  echo "使用方法："
-  echo "  bash deploy.sh YOUR_API_KEY"
-  echo ""
-  echo "示例："
-  echo "  bash deploy.sh AIzaSyC..."
-  exit 1
+  echo -e "${YELLOW}⚠️  未提供 API Key，使用配置的默认值${NC}"
+  API_KEY="AIzaSyCsvye2kLGyQIdPAfBogsUf8ZXNO5qfZmg"
+else
+  API_KEY="$1"
 fi
-
-API_KEY="$1"
 PROJECT_ID="gen-lang-client-0260270819"
 REGION="europe-west1"
 FUNCTION_NAME="generate-content"
@@ -58,6 +52,9 @@ fi
 echo ""
 echo -e "${BLUE}🚀 开始部署...${NC}"
 echo ""
+
+# 自动确认（CI/CD 友好）
+export CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
 # 部署 Cloud Function
 gcloud functions deploy "$FUNCTION_NAME" \
