@@ -1,0 +1,66 @@
+/* MyShell 2025 全局样式 */
+
+:root {
+  --myshell-bg: #020617;
+  --myshell-accent: #6366f1;
+  --myshell-border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background-color: var(--myshell-bg);
+  color: #f8fafc;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--myshell-border);
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* 星空背景动画 */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 160px 120px, #ddd, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.2;
+  animation: twinkle 5s infinite;
+}
+
+.nebula {
+  position: fixed;
+  top: -10%;
+  left: -10%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+  pointer-events: none;
+}
