@@ -161,15 +161,25 @@ const App: React.FC = () => {
       const botCount = res.matches.length;
 
       try {
+        console.log('🚀 开始生成个性化内容...');
+        console.log('📝 开发者名称:', searchName);
+        console.log('🤖 Bot 数量:', botCount);
+        console.log('🏷️  主要类别:', topTag);
+        console.log('🔑 API Key 可用:', !!process.env.API_KEY);
+
         // 并行生成：开发者头像（Nana Banana Pro）+ 感谢信（Gemini）
         const [art, summary] = await Promise.all([
           generateFutureVision(searchName, botCount, topTag),
           generateArchetypeSummary(searchName, botCount, topTag)
         ]);
+
+        console.log('✅ 头像生成结果:', art ? '成功' : '失败');
+        console.log('✅ 感谢信生成结果:', summary ? summary.substring(0, 50) + '...' : '失败');
+
         setPersonalArt(art);
         setPersonalArchetype(summary || '');
       } catch (e) {
-        console.error("Personalization failed", e);
+        console.error("❌ 个性化内容生成失败:", e);
       }
     }
     setIsProcessing(false);
@@ -344,7 +354,16 @@ const App: React.FC = () => {
                 
                 {personalArchetype && (
                   <div className="glass p-16 rounded-[4rem] relative border-indigo-500/20 shadow-2xl">
-                     <p className="text-2xl md:text-3xl leading-relaxed font-light text-indigo-100 italic font-serif">“{personalArchetype}”</p>
+                     <p className="text-2xl md:text-3xl leading-relaxed font-light text-indigo-100 italic font-serif">"{personalArchetype}"</p>
+                  </div>
+                )}
+
+                {/* 如果生成失败，显示错误提示 */}
+                {!personalArchetype && !isProcessing && (
+                  <div className="glass p-16 rounded-[4rem] relative border-red-500/20 shadow-2xl">
+                    <p className="text-xl text-red-400">
+                      ⚠️ 感谢信生成失败，请检查 API Key 配置或网络连接
+                    </p>
                   </div>
                 )}
 
@@ -365,10 +384,15 @@ const App: React.FC = () => {
                 <div className="aspect-square glass rounded-[6rem] border-white/10 overflow-hidden shadow-[0_0_120px_rgba(99,102,241,0.2)] flex items-center justify-center relative">
                   {personalArt ? (
                     <img src={personalArt} className="w-full h-full object-cover animate-fade-in" alt="Annual Achievement" />
-                  ) : (
+                  ) : isProcessing ? (
                     <div className="text-center p-20 space-y-8">
                        <div className="w-20 h-20 bg-indigo-500 rounded-full blur-3xl animate-pulse mx-auto"></div>
                        <h5 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse">Rendering Achievement...</h5>
+                    </div>
+                  ) : (
+                    <div className="text-center p-20 space-y-8">
+                      <p className="text-xl text-red-400">⚠️ 头像生成失败</p>
+                      <p className="text-sm text-gray-500">请检查 API 配置</p>
                     </div>
                   )}
                 </div>
