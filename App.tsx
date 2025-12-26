@@ -275,20 +275,49 @@ const App: React.FC = () => {
         <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-[5rem] blur-2xl opacity-30"></div>
         <div className="glass p-16 md:p-24 rounded-[4rem] border-white/10 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 blur-[120px]"></div>
-          <div className="space-y-16 relative z-10">
-            <div className="flex items-center gap-6">
-              <span className="text-indigo-400 text-[12px] font-black uppercase tracking-[0.8em]">A Legacy to Remember</span>
-              <div className="h-[1px] flex-grow bg-white/10"></div>
+          <div className="space-y-12 relative z-10">
+            {/* 标题 */}
+            <div className="space-y-6 border-b border-white/10 pb-8">
+              <div className="flex items-center gap-6">
+                <span className="text-indigo-400 text-[12px] font-black uppercase tracking-[0.8em]">A Legacy to Remember</span>
+                <div className="h-[1px] flex-grow bg-white/10"></div>
+              </div>
+              <h3 className="text-3xl md:text-4xl font-light text-white">写给每一位 MyShell 开发者老师的一封感谢信</h3>
             </div>
-            
-            <p className="text-4xl md:text-5xl font-light leading-tight text-white italic font-serif tracking-tight">
-              “2025 年是属于构建者的一年。在 MyShell，我们见证了从 0 到 {stats.total} 的跨越。每一个 Bot 都是一段独特的对话，每一个指令都是创意的火种。感谢 {stats.creators} 位开发者，你们不仅在编写代码，更是在编写未来。”
-            </p>
 
+            {/* 感谢信正文 */}
+            <div className="space-y-8 text-lg md:text-xl leading-relaxed text-indigo-100/90 font-light">
+              <p>各位 MyShell 的开发者老师们，</p>
+
+              <p>想借这个机会，认真地跟大家说一声感谢。</p>
+
+              <p>过去这一年，MyShell 能不断往前推进，靠的从来不只是某一个团队、某一个功能，更多是来自你们持续的投入、试错、打磨和坚持。无论是一个 agent 的反复调优，一次看似微小却关键的结构改进，还是在社区里主动分享经验、回答问题，这些都在实实在在地推动整个生态向前。</p>
+
+              <p>某种意义上来说 ，我觉得这里能往前走得每一步，靠的都是大家彼此得信任和理解，并且是更加坚定的选择与支持。于此，我深感无以为报，只能尽我所能敬我所不能。</p>
+
+              <p>我们很清楚，开发这件事并不总是顺利的。会遇到不稳定的接口、模糊的需求、尚在成长中的工具链，也会有反复推倒重来的时候。但正是在这些过程中，你们选择继续投入精力，把想法变成可用的产品，把概念变成真实被用户使用的东西。</p>
+
+              <p>MyShell 想做的并不是一个"展示想法的平台"，而是一个能让创作者和开发者长期留下来、持续产出的地方。而这一点，是你们用行动一点点建立起来的。</p>
+
+              <p>感谢你们对产品的耐心，对质量的坚持，也感谢你们愿意和我们一起，把事情做复杂、做深入、也尽量做正确。面对市场上游戏规则的不断改版，我们也曾不止一次的变化要求和偏好，让大家一次又一次的配合</p>
+
+              <p>未来还有很多事情要做，系统会继续变化，规则也会不断迭代。但可以确定的是，我们会认真对待每一位开发者的投入，也希望 MyShell 能成为一个配得上你们付出的平台。</p>
+
+              <p>我常在深夜也感到无力，认为配不上大家的努力和付出，自己个人能做得到的事情杯水车薪，不足为报，可总能得到大家的体谅和支持，每一个都磕一个的话好像飞机票确实有点贵了hh。</p>
+
+              <p>这个时代赋予个人的能力开始变得越来越多，我也希望我能为大家做的事情可以越来越多。但大家都是普通的平凡人，摸着石头过河有时候是常态，或许彼此扶持才常胜将军吧。</p>
+
+              <p className="text-indigo-300 italic font-serif text-2xl">愿彼此成就，愿星火燎原.</p>
+
+              <p>再次感谢。</p>
+            </div>
+
+            {/* 署名 */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 pt-12 border-t border-white/5">
               <div className="space-y-2">
-                <div className="text-[12px] font-black text-white uppercase tracking-widest">MyShell Recap Committee</div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-widest">Signed with Code & Creativity // 2025.12</div>
+                <div className="text-[14px] font-black text-white tracking-wide">bobo</div>
+                <div className="text-[12px] text-indigo-400 tracking-wider">MyShell</div>
+                <div className="text-[10px] text-gray-500 uppercase tracking-widest">2025.12</div>
               </div>
               <img src={MYSHELL_LOGO} className="h-5 opacity-40 grayscale brightness-200" alt="MyShell Logo" />
             </div>
