@@ -1,4 +1,3 @@
-
 import { BotRecord, LookupHistory, UserEvent } from './types';
 
 class LocalDB {
@@ -34,8 +33,9 @@ class LocalDB {
   }
 
   public getStats() {
-    const total = this.bots.length; // 应该是 1168
-    const creators = new Set(this.bots.map(b => b.developer)).size; // 应该是 227
+    const total = this.bots.length;
+    // Extract unique developer names, stripping the URL part if present
+    const creators = new Set(this.bots.map(b => b.developer.split('(')[0].trim())).size;
     const allTags = this.bots.flatMap(b => b.tags);
     const tagCounts: Record<string, number> = {};
     allTags.forEach(t => tagCounts[t] = (tagCounts[t] || 0) + 1);
@@ -53,9 +53,14 @@ class LocalDB {
     const query = name.trim().toLowerCase();
     
     const matches = this.bots.filter(b => {
-      const dev = b.developer.toLowerCase();
-      if (mode === 'exact') return dev === query;
-      return dev.includes(query);
+      const rawDev = b.developer.toLowerCase();
+      // Extract name from "Name (URL)" format
+      const cleanName = rawDev.split('(')[0].trim();
+      
+      if (mode === 'exact') {
+        return cleanName === query || rawDev === query;
+      }
+      return rawDev.includes(query) || cleanName.includes(query);
     });
 
     const entry: LookupHistory = {
@@ -79,7 +84,7 @@ class LocalDB {
   }
 
   private getFuzzySuggestions(query: string) {
-    const devs = Array.from(new Set(this.bots.map(b => b.developer)));
+    const devs = Array.from(new Set(this.bots.map(b => b.developer.split('(')[0].trim())));
     return devs
       .filter(d => d.toLowerCase().includes(query))
       .slice(0, 10);
