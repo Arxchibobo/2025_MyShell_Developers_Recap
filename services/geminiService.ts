@@ -22,25 +22,80 @@ export const generateArchetypeSummary = async (name: string, botCount: number, t
   return await getGeminiResponse(prompt, 'gemini-3-flash-preview');
 };
 
-export const generateFutureVision = async (wechatName: string, topCategory: string, size: "1K" | "2K" | "4K" = "1K") => {
+/**
+ * 使用 Nana Banana Pro 生成开发者个性化头像
+ * @param developerName 开发者名称
+ * @param botCount Bot 数量
+ * @param topCategory 主要创作类别
+ */
+export const generateDeveloperAvatar = async (
+  developerName: string,
+  botCount: number,
+  topCategory: string
+): Promise<string | null> => {
+  try {
+    // Nana Banana Pro 提示词：庆祝开发者成就的个性化头像
+    const prompt = `A stunning avatar celebrating developer achievement.
+    Portrait of a creative AI developer, tech-style illustration.
+    Central focus: A confident developer surrounded by holographic ${topCategory} icons and ${botCount} floating bot symbols.
+    Text overlay: "${developerName}" in elegant futuristic typography.
+    Color scheme: Deep indigo blue (#6366f1), purple gradient, white accents.
+    Style: Modern tech illustration, Pixar-like 3D character design, professional and inspiring.
+    Lighting: Soft purple glow, blue rim light, warm highlights.
+    Mood: Celebratory, innovative, achievement-focused.
+    Background: Abstract tech particles, code snippets, MyShell branding elements.
+    Quality: High-resolution, clean composition, award ceremony aesthetic.`;
+
+    // 调用 MyShell Nana Banana Pro API
+    const response = await fetch('https://api.myshell.ai/v1/bots/nana-banana-pro/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.MYSHELL_API_KEY || process.env.API_KEY}`
+      },
+      body: JSON.stringify({
+        prompt,
+        aspect_ratio: '1:1',
+        quality: 'high',
+        style: 'illustration'
+      })
+    });
+
+    if (!response.ok) {
+      console.warn('Nana Banana Pro API 调用失败，回退到 Gemini 图片生成');
+      return await generateFutureVisionFallback(developerName, topCategory);
+    }
+
+    const data = await response.json();
+    return data.image_url || data.url || null;
+  } catch (error) {
+    console.error('生成开发者头像失败:', error);
+    // 回退到 Gemini 图片生成
+    return await generateFutureVisionFallback(developerName, topCategory);
+  }
+};
+
+/**
+ * 使用 Gemini 生成开发者成就图片（备用方案）
+ */
+async function generateFutureVisionFallback(developerName: string, topCategory: string) {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // 极度强化的文字显示提示词
-  const prompt = `A cinematic 3D masterpiece celebrating the developer "${wechatName}". 
-  The center of the image is a massive, elegant golden trophy. 
-  Extremely important: The text "${wechatName}" MUST be written in huge, clean, bold 3D typography on the body of the trophy. 
-  A cute high-tech MyShell mascot robot (indigo blue and white) is hugging the trophy excitedly. 
-  Background: A high-tech stadium with holographic screens displaying the name "${wechatName}" and floating code particles. 
-  Lighting: Epic purple and blue spotlights, golden sparkles, confetti. 
-  Style: 4K Octane render, Pixar movie quality, hyper-realistic textures. 
-  The name "${wechatName}" is the hero of this visual.`;
-  
+  const prompt = `A cinematic 3D masterpiece celebrating the developer "${developerName}".
+  The center of the image is a massive, elegant golden trophy.
+  Extremely important: The text "${developerName}" MUST be written in huge, clean, bold 3D typography on the body of the trophy.
+  A cute high-tech MyShell mascot robot (indigo blue and white) is hugging the trophy excitedly.
+  Background: A high-tech stadium with holographic screens displaying "${topCategory}" and floating code particles.
+  Lighting: Epic purple and blue spotlights, golden sparkles, confetti.
+  Style: 4K Octane render, Pixar movie quality, hyper-realistic textures.
+  The name "${developerName}" is the hero of this visual.`;
+
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-image-preview',
     contents: { parts: [{ text: prompt }] },
     config: {
       imageConfig: {
         aspectRatio: "1:1",
-        imageSize: size
+        imageSize: "2K"
       }
     }
   });
@@ -51,4 +106,6 @@ export const generateFutureVision = async (wechatName: string, topCategory: stri
     }
   }
   return null;
-};
+}
+
+export const generateFutureVision = generateDeveloperAvatar;

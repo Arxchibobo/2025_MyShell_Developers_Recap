@@ -158,10 +158,13 @@ const App: React.FC = () => {
       setTimeout(() => setShowConfetti(false), 5000); // Auto hide after 5s
 
       const topTag = res.matches[0].tags[0] || 'AI';
+      const botCount = res.matches.length;
+
       try {
+        // 并行生成：开发者头像（Nana Banana Pro）+ 感谢信（Gemini）
         const [art, summary] = await Promise.all([
-          generateFutureVision(searchName, topTag),
-          generateArchetypeSummary(searchName, res.matches.length, topTag)
+          generateFutureVision(searchName, botCount, topTag),
+          generateArchetypeSummary(searchName, botCount, topTag)
         ]);
         setPersonalArt(art);
         setPersonalArchetype(summary || '');
@@ -203,7 +206,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Community Stack (辞海堆叠) */}
+      {/* Community Stack (辞海堆叠 - 词云效果) */}
       <section className="relative max-w-6xl mx-auto animate-slide-up relative z-10 px-4">
         <div className="text-center mb-16 space-y-4">
            <div className="flex items-center justify-center gap-4 mb-8">
@@ -215,26 +218,44 @@ const App: React.FC = () => {
               {stats.creators} Architects of Intelligence
            </div>
         </div>
-        
+
         <div className="glass p-12 md:p-16 rounded-[3rem] border-white/5 relative overflow-hidden shadow-2xl group">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none"></div>
-          
-          <div className="flex flex-wrap justify-center content-center gap-x-4 gap-y-3 relative z-10 max-h-[800px] overflow-y-auto scrollbar-hide py-4">
-             {allCreators.map((name, i) => (
-                <span 
-                  key={name} 
-                  className="text-lg md:text-2xl font-black text-white/30 hover:text-white hover:text-glow transition-all duration-300 cursor-default select-none uppercase italic"
-                  style={{ 
-                    transitionDelay: `${(i % 20) * 10}ms`,
-                    opacity: 0.2 + Math.random() * 0.5 
-                  }}
-                >
-                  {name}
-                </span>
-             ))}
+
+          {/* 词云拼贴效果 */}
+          <div className="flex flex-wrap justify-center content-center gap-x-3 gap-y-2 relative z-10 max-h-[800px] overflow-y-auto scrollbar-hide py-8">
+             {allCreators.map((name, i) => {
+               // 随机生成样式参数
+               const fontSize = ['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl'][Math.floor(Math.random() * 6)];
+               const fontWeight = ['font-medium', 'font-bold', 'font-black'][Math.floor(Math.random() * 3)];
+               const rotation = (Math.random() - 0.5) * 8; // -4deg 到 4deg
+               const colors = ['text-white/40', 'text-indigo-300/50', 'text-purple-300/50', 'text-blue-300/50', 'text-pink-300/40'];
+               const hoverColors = ['hover:text-white', 'hover:text-indigo-400', 'hover:text-purple-400', 'hover:text-blue-400', 'hover:text-pink-400'];
+               const colorIndex = Math.floor(Math.random() * colors.length);
+
+               // 随机插入小图标
+               const icons = ['✨', '🚀', '💫', '⭐', '🎨', '🔮', '💎', '🌟'];
+               const shouldShowIcon = Math.random() > 0.85; // 15% 概率显示图标
+               const icon = shouldShowIcon ? icons[Math.floor(Math.random() * icons.length)] : '';
+
+               return (
+                 <span
+                   key={`${name}-${i}`}
+                   className={`${fontSize} ${fontWeight} ${colors[colorIndex]} ${hoverColors[colorIndex]} transition-all duration-500 cursor-default select-none inline-block px-2 py-1 hover:scale-110 hover:text-glow`}
+                   style={{
+                     transform: `rotate(${rotation}deg)`,
+                     transitionDelay: `${(i % 30) * 8}ms`,
+                     textShadow: shouldShowIcon ? '0 0 15px rgba(99, 102, 241, 0.3)' : 'none'
+                   }}
+                 >
+                   {icon && <span className="inline-block mr-1 text-sm opacity-60">{icon}</span>}
+                   {name}
+                 </span>
+               );
+             })}
              {allCreators.length === 0 && <span className="text-white/40 italic">Waiting for data injection...</span>}
           </div>
-          
+
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#020617] via-[#020617]/80 to-transparent pointer-events-none"></div>
         </div>
       </section>
