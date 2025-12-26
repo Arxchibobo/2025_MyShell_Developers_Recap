@@ -85,17 +85,20 @@ export const generateDeveloperAvatar = async (
     console.log('📡 调用 Nana Banana Pro API...');
 
     // 调用 MyShell Nana Banana Pro API
-    const response = await fetch('https://api.myshell.ai/v1/bots/nana-banana-pro/generate', {
+    // 使用正确的 MyShell API 格式
+    const response = await fetch('https://api.myshell.ai/v1/bot/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'x-myshell-openai-api-key': apiKey
       },
       body: JSON.stringify({
-        prompt,
-        aspect_ratio: '1:1',
-        quality: 'high',
-        style: 'illustration'
+        bot_id: 'nana-banana-pro',
+        messages: [{
+          role: 'user',
+          content: prompt
+        }],
+        stream: false
       })
     });
 
@@ -109,8 +112,33 @@ export const generateDeveloperAvatar = async (
     }
 
     const data = await response.json();
-    console.log('✅ Nana Banana Pro 调用成功');
-    return data.image_url || data.url || null;
+    console.log('✅ Nana Banana Pro API 响应:', data);
+
+    // MyShell API 响应格式：{ choices: [{ message: { content: "图片URL" } }] }
+    // 或者直接返回图片 URL
+    if (data.choices && data.choices[0]?.message?.content) {
+      // 从消息内容中提取图片 URL（可能是 markdown 格式 ![](url) 或直接 URL）
+      const content = data.choices[0].message.content;
+      const urlMatch = content.match(/https?:\/\/[^\s)]+\.(png|jpg|jpeg|webp)/i);
+      if (urlMatch) {
+        console.log('✅ 从响应中提取到图片 URL');
+        return urlMatch[0];
+      }
+      // 如果内容直接是 URL
+      if (content.startsWith('http')) {
+        return content;
+      }
+    }
+
+    // 尝试其他可能的响应格式
+    const imageUrl = data.image_url || data.url || data.output?.image_url || data.result?.image;
+    if (imageUrl) {
+      console.log('✅ Nana Banana Pro 调用成功，获取到图片 URL');
+      return imageUrl;
+    }
+
+    console.warn('⚠️ 响应中未找到图片 URL，回退到 Gemini');
+    return await generateFutureVisionFallback(developerName, topCategory);
   } catch (error) {
     console.error('❌ 生成开发者头像失败:', error);
     // 回退到 Gemini 图片生成
