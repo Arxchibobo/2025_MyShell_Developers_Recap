@@ -63,6 +63,12 @@ export const generateDeveloperAvatar = async (
     console.log('🔑 MYSHELL_API_KEY 状态:', process.env.MYSHELL_API_KEY ? '已配置' : '未配置');
     console.log('🔑 API_KEY 备用状态:', process.env.API_KEY ? '已配置' : '未配置');
 
+    // 临时禁用 Nana Banana Pro，直接使用 Gemini 生成图片
+    // 原因：1. MyShell API 端点需要验证  2. 当前 Gemini API Key 已泄露需要更换
+    console.log('⏭️  跳过 Nana Banana Pro，直接使用 Gemini 生成图片');
+    return await generateFutureVisionFallback(developerName, topCategory);
+
+    /* 暂时注释掉 Nana Banana Pro 调用
     // Nana Banana Pro 提示词：庆祝开发者成就的个性化头像
     const prompt = `A stunning avatar celebrating developer achievement.
     Portrait of a creative AI developer, tech-style illustration.
@@ -110,35 +116,7 @@ export const generateDeveloperAvatar = async (
       console.log('🔄 回退到 Gemini 图片生成...');
       return await generateFutureVisionFallback(developerName, topCategory);
     }
-
-    const data = await response.json();
-    console.log('✅ Nana Banana Pro API 响应:', data);
-
-    // MyShell API 响应格式：{ choices: [{ message: { content: "图片URL" } }] }
-    // 或者直接返回图片 URL
-    if (data.choices && data.choices[0]?.message?.content) {
-      // 从消息内容中提取图片 URL（可能是 markdown 格式 ![](url) 或直接 URL）
-      const content = data.choices[0].message.content;
-      const urlMatch = content.match(/https?:\/\/[^\s)]+\.(png|jpg|jpeg|webp)/i);
-      if (urlMatch) {
-        console.log('✅ 从响应中提取到图片 URL');
-        return urlMatch[0];
-      }
-      // 如果内容直接是 URL
-      if (content.startsWith('http')) {
-        return content;
-      }
-    }
-
-    // 尝试其他可能的响应格式
-    const imageUrl = data.image_url || data.url || data.output?.image_url || data.result?.image;
-    if (imageUrl) {
-      console.log('✅ Nana Banana Pro 调用成功，获取到图片 URL');
-      return imageUrl;
-    }
-
-    console.warn('⚠️ 响应中未找到图片 URL，回退到 Gemini');
-    return await generateFutureVisionFallback(developerName, topCategory);
+    */
   } catch (error) {
     console.error('❌ 生成开发者头像失败:', error);
     // 回退到 Gemini 图片生成
