@@ -1,9 +1,10 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Page, BotRecord } from './types';
 import { db } from './db';
 import './data';
-import { generateFutureVision, generateArchetypeSummary } from './services/geminiService';
+import { generateArchetypeSummary } from './services/geminiService';
+import { generateTitle, getRarityColor, getRarityText, TitleInfo } from './utils/titleGenerator';
 
 const MYSHELL_LOGO = 'https://cdn.prod.website-files.com/67b6e9e9cc3bf11efbceec75/67e64a7cb6f1401a791ea912_myshell-logo-horizontal_base50-lightgray.png';
 
@@ -122,9 +123,10 @@ const App: React.FC = () => {
   const [searchName, setSearchName] = useState('');
   const [creatorResults, setCreatorResults] = useState<{ matches: BotRecord[], suggestions: string[] } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [personalArt, setPersonalArt] = useState<string | null>(null);
   const [personalArchetype, setPersonalArchetype] = useState<string>('');
+  const [titleInfo, setTitleInfo] = useState<TitleInfo | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null); // 用于截图分享
 
   // 抽奖相关状态
   const [showLottery, setShowLottery] = useState(false);
@@ -148,44 +150,40 @@ const App: React.FC = () => {
   const handlePersonalWrapped = async () => {
     if (!searchName.trim()) return;
     setIsProcessing(true);
-    setPersonalArt(null);
     setPersonalArchetype('');
-    setShowConfetti(false); // Reset before new search
-    
-    if (window.aistudio && !(await window.aistudio.hasSelectedApiKey())) {
-      await window.aistudio.openSelectKey();
-    }
+    setTitleInfo(null);
+    setShowConfetti(false); // 重置彩纸动画
 
     const res = db.searchByCreator(searchName, 'fuzzy');
     setCreatorResults(res);
 
     if (res.matches.length > 0) {
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000); // Auto hide after 5s
+      setTimeout(() => setShowConfetti(false), 5000); // 5秒后自动隐藏
 
       const topTag = res.matches[0].tags[0] || 'AI';
       const botCount = res.matches.length;
 
+      // 生成 MyShell Title
+      const title = generateTitle(botCount, topTag);
+      setTitleInfo(title);
+
       try {
-        console.log('🚀 开始生成个性化内容...');
+        console.log('🚀 开始生成个性化感谢信...');
         console.log('📝 开发者名称:', searchName);
         console.log('🤖 Bot 数量:', botCount);
         console.log('🏷️  主要类别:', topTag);
-        console.log('🔑 API Key 可用:', !!process.env.API_KEY);
+        console.log('🏆 获得称号:', title.name);
 
-        // 并行生成：开发者头像（Nana Banana Pro）+ 感谢信（Gemini）
-        const [art, summary] = await Promise.all([
-          generateFutureVision(searchName, botCount, topTag),
-          generateArchetypeSummary(searchName, botCount, topTag)
-        ]);
+        // 生成个性化感谢信（通过 Cloud Function）
+        const summary = await generateArchetypeSummary(searchName, botCount, topTag);
 
-        console.log('✅ 头像生成结果:', art ? '成功' : '失败');
-        console.log('✅ 感谢信生成结果:', summary ? summary.substring(0, 50) + '...' : '失败');
+        console.log('✅ 感谢信生成成功:', summary ? summary.substring(0, 50) + '...' : '使用备用文案');
 
-        setPersonalArt(art);
         setPersonalArchetype(summary || '');
       } catch (e) {
-        console.error("❌ 个性化内容生成失败:", e);
+        console.error("❌ 感谢信生成失败:", e);
+        // 即使失败也会有备用文案
       }
     }
     setIsProcessing(false);
@@ -437,62 +435,112 @@ const App: React.FC = () => {
 
       {creatorResults && creatorResults.matches.length > 0 && (
         <div className="animate-fade-in space-y-48">
-          {/* 顶部英雄版块 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-             <div className="space-y-20">
-                <div className="space-y-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-[2px] bg-indigo-500"></div>
-                    <span className="text-indigo-400 text-sm font-black uppercase tracking-[0.6em]">Validated Builder</span>
-                  </div>
-                  <h3 className="text-9xl font-black tracking-tighter uppercase italic text-white leading-none">{searchName}</h3>
+          {/* 成就卡片 - 可分享 */}
+          <div
+            ref={shareCardRef}
+            className="glass p-20 rounded-[6rem] border-white/5 relative overflow-hidden max-w-6xl mx-auto"
+            style={{ backgroundColor: 'rgb(15, 23, 42)' }} // 固定背景色用于截图
+          >
+            {/* 装饰性背景 */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
+
+            {/* 内容区域 */}
+            <div className="relative z-10 space-y-16">
+              {/* 标题和称号 */}
+              <div className="text-center space-y-8">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="w-12 h-[2px] bg-indigo-500"></div>
+                  <span className="text-indigo-400 text-sm font-black uppercase tracking-[0.6em]">MyShell 2025 Achievement</span>
+                  <div className="w-12 h-[2px] bg-indigo-500"></div>
                 </div>
-                
-                {personalArchetype && (
-                  <div className="glass p-16 rounded-[4rem] relative border-indigo-500/20 shadow-2xl">
-                     <p className="text-2xl md:text-3xl leading-relaxed font-light text-indigo-100 italic font-serif">"{personalArchetype}"</p>
+
+                <h3 className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic text-white leading-none">
+                  {searchName}
+                </h3>
+
+                {/* MyShell Title 称号展示 */}
+                {titleInfo && (
+                  <div className={`inline-flex items-center gap-4 px-12 py-6 rounded-full ${getRarityColor(titleInfo.rarity).bg} ${getRarityColor(titleInfo.rarity).border} border-2 ${getRarityColor(titleInfo.rarity).glow}`}>
+                    <span className="text-5xl">{titleInfo.emoji}</span>
+                    <div className="text-left">
+                      <div className={`text-2xl font-black ${getRarityColor(titleInfo.rarity).text}`}>{titleInfo.name}</div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider">{getRarityText(titleInfo.rarity)} · {titleInfo.description}</div>
+                    </div>
                   </div>
                 )}
+              </div>
 
-                {/* 如果生成失败，显示错误提示 */}
-                {!personalArchetype && !isProcessing && (
-                  <div className="glass p-16 rounded-[4rem] relative border-red-500/20 shadow-2xl">
-                    <p className="text-xl text-red-400">
-                      ⚠️ 感谢信生成失败，请检查 API Key 配置或网络连接
-                    </p>
+              {/* 个性化感谢信 */}
+              {personalArchetype && (
+                <div className="glass p-16 rounded-[4rem] relative border-indigo-500/20">
+                  <p className="text-2xl md:text-3xl leading-relaxed font-light text-indigo-100 italic font-serif text-center">
+                    "{personalArchetype}"
+                  </p>
+                </div>
+              )}
+
+              {/* 成就统计 */}
+              <div className="grid grid-cols-3 gap-8">
+                <div className="text-center glass p-8 rounded-[3rem] border-white/5">
+                  <div className="text-6xl font-black text-white">{creatorResults.matches.length}</div>
+                  <div className="text-xs uppercase tracking-widest text-indigo-400 mt-3 font-bold">创作总数</div>
+                </div>
+                <div className="text-center glass p-8 rounded-[3rem] border-white/5">
+                  <div className="text-6xl font-black text-purple-400">
+                    {Array.from(new Set(creatorResults.matches.flatMap(b => b.tags))).length}
                   </div>
-                )}
-
-                <div className="flex gap-12 items-center">
-                    <div className="glass p-12 rounded-[3rem] border-white/5 flex flex-col items-center min-w-[200px]">
-                        <div className="text-8xl font-black text-white leading-none">{creatorResults.matches.length}</div>
-                        <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mt-4">Total Creations</div>
-                    </div>
-                    <div className="text-gray-500 text-[12px] uppercase tracking-widest leading-loose font-medium">
-                      在 2025 年的每一天<br/>
-                      你都在用代码<br/>
-                      绘制属于自己的星图
-                    </div>
+                  <div className="text-xs uppercase tracking-widest text-purple-400 mt-3 font-bold">涉及领域</div>
                 </div>
-             </div>
-
-             <div className="relative group">
-                <div className="aspect-square glass rounded-[6rem] border-white/10 overflow-hidden shadow-[0_0_120px_rgba(99,102,241,0.2)] flex items-center justify-center relative">
-                  {personalArt ? (
-                    <img src={personalArt} className="w-full h-full object-cover animate-fade-in" alt="Annual Achievement" />
-                  ) : isProcessing ? (
-                    <div className="text-center p-20 space-y-8">
-                       <div className="w-20 h-20 bg-indigo-500 rounded-full blur-3xl animate-pulse mx-auto"></div>
-                       <h5 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse">Rendering Achievement...</h5>
-                    </div>
-                  ) : (
-                    <div className="text-center p-20 space-y-8">
-                      <p className="text-xl text-red-400">⚠️ 头像生成失败</p>
-                      <p className="text-sm text-gray-500">请检查 API 配置</p>
-                    </div>
-                  )}
+                <div className="text-center glass p-8 rounded-[3rem] border-white/5">
+                  <div className="text-6xl font-black text-yellow-400">2025</div>
+                  <div className="text-xs uppercase tracking-widest text-yellow-400 mt-3 font-bold">年度标记</div>
                 </div>
-             </div>
+              </div>
+
+              {/* MyShell Logo */}
+              <div className="flex justify-center opacity-30">
+                <img src={MYSHELL_LOGO} className="h-6" alt="MyShell" />
+              </div>
+            </div>
+          </div>
+
+          {/* 分享按钮 */}
+          <div className="text-center">
+            <button
+              onClick={async () => {
+                if (!shareCardRef.current) return;
+                try {
+                  // 使用 html2canvas 截图
+                  const canvas = await import('html2canvas').then(m => m.default(shareCardRef.current!, {
+                    backgroundColor: '#0f172a',
+                    scale: 2, // 高清截图
+                    logging: false,
+                  }));
+
+                  // 转换为 Blob
+                  canvas.toBlob((blob) => {
+                    if (!blob) return;
+
+                    // 创建下载链接
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `MyShell_2025_${searchName}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    alert('✅ 成就卡片已保存！可以分享到社交媒体了 🎉');
+                  }, 'image/png');
+                } catch (error) {
+                  console.error('截图失败:', error);
+                  alert('❌ 截图失败，请稍后重试');
+                }
+              }}
+              className="px-20 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black uppercase tracking-[0.8em] text-sm rounded-full hover:shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all active:scale-95"
+            >
+              📸 一键生成分享图片
+            </button>
           </div>
 
           {/* 作品展示墙 - Vault of Creations */}
