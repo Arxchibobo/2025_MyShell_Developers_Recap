@@ -13,10 +13,9 @@ class LocalDB {
   private loadPersistedData() {
     const h = localStorage.getItem('bot_lookup_history');
     const e = localStorage.getItem('bot_user_events');
-    const w = localStorage.getItem('lucky_winner');
     if (h) this.history = JSON.parse(h);
     if (e) this.events = JSON.parse(e);
-    if (w) this.luckyWinner = w;
+    // 不再从 localStorage 加载中奖者
   }
 
   private saveHistory() {
@@ -29,15 +28,12 @@ class LocalDB {
 
   public seed(data: BotRecord[]) {
     this.bots = data;
+    // 抽奖已结束，不再自动抽取
+  }
 
-    // 如果还没有选出中奖者，随机选择一位
-    if (!this.luckyWinner && data.length > 0) {
-      const uniqueDevs = Array.from(new Set(data.map(b => b.developer)));
-      const randomIndex = Math.floor(Math.random() * uniqueDevs.length);
-      this.luckyWinner = uniqueDevs[randomIndex];
-      localStorage.setItem('lucky_winner', this.luckyWinner);
-      console.log('🎉 彩蛋抽奖：中奖者已选出！', this.luckyWinner);
-    }
+  // 获取固定的中奖者名单（2026 年元旦大礼包）
+  public getLotteryWinners(): string[] {
+    return ['LK', 'L gong', 'X'];
   }
 
   public getAllBots(): BotRecord[] {
@@ -94,8 +90,9 @@ class LocalDB {
     this.saveHistory();
     this.logEvent('search', { query: name, mode, results: matches.length });
 
-    // 检查是否为中奖者
-    const isWinner = matches.length > 0 && matches.some(b => b.developer === this.luckyWinner);
+    // 检查是否为中奖者（从固定名单检查）
+    const winners = this.getLotteryWinners();
+    const isWinner = matches.length > 0 && matches.some(b => winners.includes(b.developer));
 
     return {
       matches,

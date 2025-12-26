@@ -225,6 +225,55 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* 🎉 2026 元旦大礼包中奖者公告 */}
+      <section className="relative max-w-6xl mx-auto animate-slide-up relative z-10 px-4 mb-32">
+        <div className="glass p-16 rounded-[4rem] border-2 border-yellow-500/30 relative overflow-hidden shadow-[0_0_80px_rgba(234,179,8,0.3)]">
+          {/* 装饰性背景 */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-500/20 rounded-full blur-[150px] pointer-events-none"></div>
+
+          {/* 内容区域 */}
+          <div className="relative z-10 space-y-12 text-center">
+            {/* 标题 */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-6">
+                <span className="text-6xl animate-pulse">🎊</span>
+                <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
+                  2026 元旦大礼包
+                </h2>
+                <span className="text-6xl animate-pulse">🎁</span>
+              </div>
+              <p className="text-xl text-yellow-200/80 uppercase tracking-widest">MyShell 2025 年度回顾抽奖结果公布</p>
+            </div>
+
+            {/* 中奖者名单 */}
+            <div className="glass p-12 rounded-[3rem] border-yellow-500/20 bg-yellow-500/5">
+              <div className="text-sm text-yellow-300/60 uppercase tracking-[0.8em] mb-6">恭喜以下 3 位幸运开发者</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {db.getLotteryWinners().map((winner, index) => (
+                  <div key={index} className="space-y-3">
+                    <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-500 animate-pulse">
+                      {winner}
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="text-3xl">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</div>
+                      <div className="text-sm text-yellow-400 font-bold uppercase">中奖者</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 说明文字 */}
+            <div className="space-y-2">
+              <p className="text-lg text-yellow-100">🎉 感谢所有参与 MyShell 2025 年度回顾的开发者！</p>
+              <p className="text-sm text-yellow-300/60">中奖者将收到来自 MyShell 团队的元旦大礼包</p>
+              <p className="text-xs text-yellow-400/40 uppercase tracking-wider mt-4">抽奖已结束 · 2025-12-26</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Community Stack (辞海堆叠 - 词云效果) */}
       <section className="relative max-w-6xl mx-auto animate-slide-up relative z-10 px-4">
         <div className="text-center mb-16 space-y-4">
@@ -397,10 +446,10 @@ const App: React.FC = () => {
                 {isLuckyWinner && (
                   <div className="mb-12 animate-bounce">
                     <div className="inline-flex items-center gap-6 px-16 py-8 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/40 shadow-[0_0_80px_rgba(234,179,8,0.5)]">
-                      <span className="text-7xl animate-pulse">🎉</span>
+                      <span className="text-7xl animate-pulse">🎁</span>
                       <div className="text-left">
-                        <div className="text-4xl font-black text-yellow-300">恭喜中奖！</div>
-                        <div className="text-lg text-yellow-200 mt-1">你是本次年度回顾的幸运儿！</div>
+                        <div className="text-4xl font-black text-yellow-300">2026 元旦大礼包获得者！</div>
+                        <div className="text-lg text-yellow-200 mt-1">恭喜你获得 MyShell 团队的新年礼物！</div>
                       </div>
                       <span className="text-7xl animate-pulse">🎊</span>
                     </div>
