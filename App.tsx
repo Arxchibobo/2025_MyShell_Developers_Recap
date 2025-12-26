@@ -125,9 +125,15 @@ const App: React.FC = () => {
   const [personalArt, setPersonalArt] = useState<string | null>(null);
   const [personalArchetype, setPersonalArchetype] = useState<string>('');
   const [showConfetti, setShowConfetti] = useState(false);
-  
+
+  // 抽奖相关状态
+  const [showLottery, setShowLottery] = useState(false);
+  const [lotteryWinner, setLotteryWinner] = useState<string | null>(null);
+  const [clickCount, setClickCount] = useState(0);
+  const [isDrawing, setIsDrawing] = useState(false);
+
   const stats = useMemo(() => db.getStats(), []);
-  
+
   const allCreators = useMemo(() => {
     const bots = db.getAllBots();
     const unique = Array.from(new Set(bots.map(b => b.developer)));
@@ -185,10 +191,71 @@ const App: React.FC = () => {
     setIsProcessing(false);
   };
 
+  // 检查是否已有中奖者
+  useEffect(() => {
+    const winner = localStorage.getItem('myshell_lottery_winner_2025');
+    if (winner) {
+      setLotteryWinner(winner);
+    }
+  }, []);
+
+  // 隐藏触发器：连续点击 Logo 5 次
+  const handleSecretClick = () => {
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+
+    if (newCount >= 5) {
+      setShowLottery(true);
+      setClickCount(0); // 重置计数
+    }
+
+    // 3 秒后自动重置计数
+    setTimeout(() => {
+      setClickCount(0);
+    }, 3000);
+  };
+
+  // 抽奖逻辑
+  const handleDrawLottery = () => {
+    if (lotteryWinner) {
+      alert(`已经有中奖者了！🎉\n中奖者：${lotteryWinner}`);
+      return;
+    }
+
+    setIsDrawing(true);
+
+    // 模拟抽奖动画（2秒）
+    let animationCount = 0;
+    const interval = setInterval(() => {
+      const randomCreator = allCreators[Math.floor(Math.random() * allCreators.length)];
+      setLotteryWinner(randomCreator);
+      animationCount++;
+
+      if (animationCount >= 20) {
+        clearInterval(interval);
+
+        // 最终随机选择一个开发者
+        const finalWinner = allCreators[Math.floor(Math.random() * allCreators.length)];
+        setLotteryWinner(finalWinner);
+        localStorage.setItem('myshell_lottery_winner_2025', finalWinner);
+
+        setIsDrawing(false);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 8000);
+      }
+    }, 100);
+  };
+
   const Nav = () => (
     <nav className="fixed top-0 left-0 right-0 glass z-50 px-10 py-6 flex justify-between items-center border-b border-white/5">
       <div className="flex items-center gap-4 cursor-pointer" onClick={() => setCurrentPage(Page.Overview)}>
-        <img src={MYSHELL_LOGO} alt="MyShell" className="h-6 opacity-90" />
+        <img
+          src={MYSHELL_LOGO}
+          alt="MyShell"
+          className="h-6 opacity-90"
+          onDoubleClick={handleSecretClick}
+          title={clickCount > 0 ? `${clickCount}/5` : ''}
+        />
         <div className="w-[1px] h-4 bg-white/20"></div>
         <span className="text-[10px] text-indigo-300 font-black tracking-[0.4em] uppercase">2025 ARCHIVE</span>
       </div>
@@ -507,6 +574,82 @@ const App: React.FC = () => {
         {currentPage === Page.Overview && renderOverview()}
         {currentPage === Page.Creator && renderCreator()}
       </main>
+
+      {/* 抽奖弹窗 */}
+      {showLottery && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[200] flex items-center justify-center p-8 animate-fade-in">
+          <div className="glass max-w-2xl w-full p-16 rounded-[4rem] relative border-white/10 space-y-12 animate-slide-up">
+            {/* 关闭按钮 */}
+            <button
+              onClick={() => setShowLottery(false)}
+              className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
+            >
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* 标题 */}
+            <div className="text-center space-y-4">
+              <h2 className="text-6xl font-black text-white tracking-tighter">🎉 神秘抽奖 🎉</h2>
+              <p className="text-xl text-indigo-300">从全体 {allCreators.length} 位开发者中抽取一位幸运星</p>
+            </div>
+
+            {/* 抽奖显示区域 */}
+            <div className="glass p-12 rounded-[3rem] border-indigo-500/30 bg-indigo-500/5 min-h-[200px] flex items-center justify-center">
+              {lotteryWinner ? (
+                <div className="text-center space-y-6">
+                  <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-600 animate-pulse">
+                    {lotteryWinner}
+                  </div>
+                  {!isDrawing && (
+                    <div className="text-3xl text-green-400 font-black animate-bounce">
+                      🎊 恭喜中奖！🎊
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center space-y-6">
+                  <div className="text-4xl text-gray-500">等待抽奖...</div>
+                  <p className="text-gray-600">双击顶部 Logo 可开启此功能</p>
+                </div>
+              )}
+            </div>
+
+            {/* 抽奖按钮 */}
+            <div className="flex gap-6 justify-center">
+              <button
+                onClick={handleDrawLottery}
+                disabled={isDrawing || (lotteryWinner !== null && !isDrawing)}
+                className="px-16 py-6 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black rounded-full hover:shadow-[0_0_60px_rgba(251,191,36,0.6)] transition-all text-lg uppercase tracking-wider active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDrawing ? '抽奖中...' : lotteryWinner && !isDrawing ? '已有中奖者' : '🎲 开始抽奖'}
+              </button>
+
+              {lotteryWinner && !isDrawing && (
+                <button
+                  onClick={() => {
+                    if (confirm('确定要清除中奖记录吗？这将允许重新抽奖。')) {
+                      localStorage.removeItem('myshell_lottery_winner_2025');
+                      setLotteryWinner(null);
+                    }
+                  }}
+                  className="px-12 py-6 bg-red-500/20 text-red-400 font-black rounded-full hover:bg-red-500/30 transition-all text-lg uppercase tracking-wider active:scale-95 border border-red-500/30"
+                >
+                  重置
+                </button>
+              )}
+            </div>
+
+            {/* 说明文字 */}
+            <div className="text-center text-sm text-gray-500 space-y-2">
+              <p>⚠️ 本次抽奖全平台仅一位中奖者</p>
+              <p className="text-xs">中奖信息存储在本地浏览器，清除缓存后可重置</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer className="fixed bottom-0 left-0 right-0 py-10 text-center glass border-t border-white/5 z-50">
           <div className="text-[10px] font-black tracking-[1em] text-white/20 uppercase italic">MyShell 2025 Ecosystem // Secure Legacy Archive</div>
       </footer>
